@@ -1,14 +1,17 @@
 buildscript {
     repositories {
-        mavenCentral()
         mavenLocal()
         maven {
             name = "forge"
-            url = "http://files.minecraftforge.net/maven"
+            url = "https://files.minecraftforge.net/maven"
         }
         maven {
             name = "sonatype"
             url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+        maven {
+            name = 'mavenCentral'
+            url = 'https://repo1.maven.org/maven2/'
         }
     }
     dependencies {
@@ -27,6 +30,10 @@ apply plugin: 'forgedev'
 
 repositories {
     mavenLocal()
+    maven {
+        name = 'mavenCentral'
+        url = 'https://repo1.maven.org/maven2/'
+    }
     flatDir {
         name "fileRepo"
         dirs "repo"
@@ -55,7 +62,28 @@ if (project.hasProperty("crowdinKey"))
 
 
 launch4j {
-    jreMinVersion = '1.6.0'
+    jreMinVersion = '1.8.0'
+}
+
+tasks.withType(JavaCompile) {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+    options.encoding = 'UTF-8'
+}
+
+def jenkBase = 'build/jenk/'
+project.file(jenkBase + 'job/minecraftforge/api').mkdirs()
+project.file(jenkBase + 'job/minecraftforge/api/python').createNewFile()
+project.file(jenkBase + 'job/minecraftforge/lastBuild/api').mkdirs()
+project.file(jenkBase + 'job/minecraftforge/lastBuild/api/python').createNewFile()
+jenkins.server = 'file://' + project.file(jenkBase) + '/'
+
+if (!System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('win')) {
+    def winInstaller = project.file('build/distributions/' + archivesBaseName + '-' + version + '-installer-win.exe')
+    if (!winInstaller.exists()) {
+        winInstaller.parentFile.mkdirs()
+        winInstaller.createNewFile()
+    }
 }
 
 uploadArchives {
